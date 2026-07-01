@@ -1,11 +1,35 @@
-// MISO Dental Studio — Interactive behaviors & Micro-motions
+// MISO Dental Studio — Interactive behaviors & Fluid motions
+
+/* ----------------------------------------------------------------
+   Configuración de WhatsApp
+   ⚠️ IMPORTANTE: reemplaza WHATSAPP_NUMBER con el número real del
+   consultorio en formato internacional sin espacios ni símbolos:
+   52 (México) + LADA + número. Ej. Morelia: 5214431234567
+---------------------------------------------------------------- */
+const WHATSAPP_NUMBER = '5214431234567'; // TODO: reemplazar con el número real de MISO Dental Studio
+
+const WHATSAPP_GENERIC_MESSAGE =
+    'Hola MISO Dental Studio, me gustaría agendar una valoración inicial. ¿Podrían darme más información sobre disponibilidad?';
+
+function buildWhatsAppUrl(message) {
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Remover el velo de carga inicial de manera elegante
+    // Quitar el velo de carga inicial de manera fluida
     setTimeout(() => {
         document.body.classList.add('loaded');
-    }, 150);
+    }, 100);
+
+    /* ----------------------------------------------------------------
+       Enlaces de WhatsApp (botón flotante, footer, contacto directo)
+    ---------------------------------------------------------------- */
+    const genericWhatsAppUrl = buildWhatsAppUrl(WHATSAPP_GENERIC_MESSAGE);
+    ['whatsappFloat', 'whatsappFooterLink', 'whatsappDirectLink'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.href = genericWhatsAppUrl;
+    });
 
     /* ----------------------------------------------------------------
        Menú Móvil Desplegable
@@ -19,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             navMenu.classList.toggle('open');
         });
 
-        // Cerrar menú si se hace click en algún enlace interno
+        // Cerrar menú al presionar un enlace interno
         navMenu.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', () => {
                 navToggle.classList.remove('open');
@@ -29,19 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* ----------------------------------------------------------------
-       Efecto del Encabezado al hacer Scroll
+       Efecto del Menú Superior al Hacer Scroll
     ---------------------------------------------------------------- */
     const header = document.getElementById('siteHeader');
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 40) {
+        if (window.scrollY > 20) {
             header.classList.add('scrolled');
         } else {
             header.classList.remove('scrolled');
         }
-    });
+    }, { passive: true });
 
     /* ----------------------------------------------------------------
-       Intersection Observer para animar las secciones al bajar (Scroll Reveal)
+       Intersection Observer para animaciones elegantes (Scroll Reveal)
     ---------------------------------------------------------------- */
     const revealElements = document.querySelectorAll('.scroll-reveal');
 
@@ -53,14 +77,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -40px 0px'
+        threshold: 0.05,
+        rootMargin: '0px 0px -20px 0px'
     });
 
     revealElements.forEach(el => revealOnScroll.observe(el));
 
     /* ----------------------------------------------------------------
-       Formulario de Citas - Manejo de éxito con transiciones fijas
+       Tilt sutil en la tarjeta principal del bento (toque premium)
+    ---------------------------------------------------------------- */
+    const bentoMain = document.getElementById('bentoMain');
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (bentoMain && window.matchMedia('(hover: hover)').matches && !prefersReducedMotion) {
+        const maxTilt = 4;
+
+        bentoMain.addEventListener('mousemove', (e) => {
+            const rect = bentoMain.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width - 0.5;
+            const y = (e.clientY - rect.top) / rect.height - 0.5;
+            bentoMain.style.transform = `perspective(1000px) rotateY(${x * maxTilt}deg) rotateX(${-y * maxTilt}deg) translateY(-5px)`;
+        });
+
+        bentoMain.addEventListener('mouseleave', () => {
+            bentoMain.style.transform = '';
+        });
+    }
+
+    /* ----------------------------------------------------------------
+       Formulario de Citas — genera plantilla y abre WhatsApp
     ---------------------------------------------------------------- */
     const form = document.getElementById('appointmentForm');
     const successMessage = document.getElementById('successMessage');
@@ -69,24 +114,30 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            const service = document.getElementById('service').value;
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const serviceSelect = document.getElementById('service');
+            const service = serviceSelect.options[serviceSelect.selectedIndex].value;
 
-            console.log(`Nueva cita premium solicitada por: ${name} (${phone}) para el servicio: ${service}`);
+            const template =
+                `Hola MISO Dental Studio, soy ${name}.\n` +
+                `Me gustaría agendar una valoración para: ${service}.\n` +
+                `Mi número de contacto es ${phone}. Quedo atento(a) para coordinar día y hora.`;
+
+            window.open(buildWhatsAppUrl(template), '_blank', 'noopener');
 
             form.style.opacity = '0';
-            form.style.transition = 'opacity 0.4s ease';
+            form.style.transition = 'opacity 0.3s ease';
 
             setTimeout(() => {
                 form.style.display = 'none';
                 successMessage.classList.remove('hidden');
-            }, 400);
+            }, 300);
         });
     }
 
     /* ----------------------------------------------------------------
-       Rotador y Slider de Testimonios
+       Rotador de Testimonios
     ---------------------------------------------------------------- */
     const testimonials = document.querySelectorAll('.testimonial');
     const dotsContainer = document.getElementById('testimonialDots');
@@ -114,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showTestimonial((activeIndex + 1) % testimonials.length);
         }
 
-        // Cambio automático de testimonios cada 6 segundos
+        // Intervalo de cambio suave automático
         testimonialTimer = setInterval(nextTestimonial, 6000);
     }
 });
